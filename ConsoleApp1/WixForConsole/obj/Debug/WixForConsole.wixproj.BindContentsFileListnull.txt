@@ -1,0 +1,1 @@
+C:\Users\bviolet\RiderProjects\TestWixInstaller\ConsoleApp1\WinFormsApp1\bin\Debug\net6.0-windows\WinFormsApp1.dll

@@ -1,0 +1,6 @@
+C:\Users\bviolet\RiderProjects\TestWixInstaller\ConsoleApp1\WixForConsole\bin\Debug\WixForConsole.msi
+C:\Users\bviolet\RiderProjects\TestWixInstaller\ConsoleApp1\WixForConsole\bin\Debug\WixForConsole.wixpdb
+obj\Debug\Product.wixobj
+obj\Debug\WixForConsole.wixproj.BindContentsFileListnull.txt
+obj\Debug\WixForConsole.wixproj.BindOutputsFileListnull.txt
+obj\Debug\WixForConsole.wixproj.BindBuiltOutputsFileListnull.txt

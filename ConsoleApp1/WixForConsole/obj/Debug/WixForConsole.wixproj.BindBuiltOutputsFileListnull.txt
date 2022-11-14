@@ -1,0 +1,2 @@
+C:\Users\bviolet\RiderProjects\TestWixInstaller\ConsoleApp1\WixForConsole\bin\Debug\WixForConsole.msi
+C:\Users\bviolet\RiderProjects\TestWixInstaller\ConsoleApp1\WixForConsole\bin\Debug\WixForConsole.wixpdb
