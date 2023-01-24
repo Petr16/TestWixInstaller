@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+
+  <Product Id="*" Name="WixForConsole" Language="1033" Version="1.0.0.0" Manufacturer="ConsolesCompany" UpgradeCode="412f3783-6584-4e12-90ca-e24365822090">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+    
+    <!--Ограничения для запуска https://www.firegiant.com/wix/tutorial/getting-started/useful-extras/-->
+    <!--<Condition Message="You need to be an administrator to install this product https://www.firegiant.com/wix/tutorial/getting-started/useful-extras/">
+      Priveleged
+    </Condition>-->
+    <InstallExecuteSequence>
+      <!--<ScheduleReboot After="InstallFinalize"/> перезагружает комп после окончания установки-->
+      <Custom Action="LaunchFile" After="InstallFinalize" >NOT Installed</Custom> <!--запуск после установки-->
+      
+      <!--<Custom Action="CheckingPid" After="CostFinalize" /> 
+      <Custom Action="RefusePID" After="CheckingPid">PIDACCEPTED = "0" AND NOT Installed</Custom>-->
+
+      <Custom Action="MyAction.SetProperty" After="InstallFinalize"/>
+      <!--<Custom Action="MyAction.SetProperty" After="ValidateProductID"/>
+      <Custom Action="MyAction" After="MyAction.SetProperty"/>-->
+    </InstallExecuteSequence>
+    <CustomAction Id="LaunchFile" FileKey="WinFormsApp1.exe" ExeCommand="" Return="asyncNoWait"/> <!--запуск после установки, FileKey это File Id="WinFormsApp1.exe"-->
+    <CustomAction Id="LaunchFile2" Property="NOTEPAD" ExeCommand="[SourceDir]Readme.txt" Return="asyncNoWait"/> <!--Запускаем Notepad.exe на компьютере пользователя-->
+    <CustomAction Id="AbortError" Error="Standart Error action"/>
+    <!--Присвоить значения одного свойства другому
+    <CustomAction Id="PropertyAssign" Property="PathProperty" Value="[INSTALLFOLDER][FilenameProperty].[ExtensionProperty]"/>
+    <CustomAction Id="PropertyAssign" Directory="INSTALLFOLDER" Value="[TARGETDIR]\Program Files\WixForConsole"/>-->
+    
+    <CustomAction Id="CheckingPid" BinaryKey="CheckPID"  DllEntry="CheckPID"/>
+    <CustomAction Id="RefusePID" Error="Invalid key. Installation aborted" />
+    <Binary Id="CheckPID" SourceFile="CheckPID.dll" />
+    <Binary Id="Exclam.ico" SourceFile="Exclam.ico" />
+    <Condition Message="This installation can only run in full UI mode">
+      <![CDATA[Installed OR UILevel=5]]>
+    </Condition>
+
+    <!--<CustomAction Id="MyAction" Return="check" Execute="deferred" BinaryKey="CustomActionsLibrary" DllEntry="MyAction" HideTarget="yes"/>-->
+    <CustomAction Id="MyAction.SetProperty" Return="check" Property="MyAction" Value="[SOME_PUBLIC_PROPERTY]"/>
+    <Property Id="SOME_PUBLIC_PROPERTY">Hello, from differed CA</Property>
+
+    <PropertyRef Id="NETFRAMEWORK35"/>
+    <Condition Message='This setup requires the .NET Framework 3.5 installed.'>
+      <![CDATA[Installed OR NETFRAMEWORK35]]>
+    </Condition>
+    
+    
+    
+    
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate EmbedCab="yes"/>
+    <Icon Id="wix32ICO" SourceFile="$(var.WinFormsApp1.TargetDir)wix-32convert.ico"/>
+    
+    <Property Id="ARPPRODUCTICON" Value="wix32ICO"/><!--Для отображения эскиза иконки программы в разделе "Приложения и возможности" window10-->
+    <Property Id="INSTALLFOLDER">
+      <RegistrySearch Id="WixForConsoleRegistry" Root="HKCU" Key="Software\[Manufacturer]\[ProductName]" Type="raw" Name="InstallFolder"/>
+      <!--Файл .ini обязательно должен лежать в папке C:\Windows\WixForConsoleRegistry.ini с кодировкой ANSI-->
+      <IniFileSearch Id='WixForConsoleIniFile' Type='directory' Name='WixForConsoleRegistry.ini' Section='WixForConsole' Key='InstallFolder' />
+    </Property>
+    <Property Id="NOTEPAD">Notepad.exe</Property>
+    <!---->
+    <Property Id="FILEEXISTS">
+      <DirectorySearch Id="CheckFileDir" Path="[INSTALLFOLDER]" Depth="0">
+        <FileSearch Id="CheckFile" Name="Lookfor.txt"/>
+      </DirectorySearch>
+    </Property>
+    
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER"/><!--INSTALLFOLDER - дирректория,  которая указана для установки в ComponentGroup-->
+    <Feature Id="Complete" Title="WixForConsole" Description="The complete package."
+             Display="expand" Level="1" ConfigurableDirectory="INSTALLFOLDER"> <!--level=INSTALLLEVEL, ConfigurableDirectory - позволяем пользователю менять место установки-->
+      <Feature Id="MainProgram" Title="Program" Description="The main executable." Level="1">
+        <ComponentGroupRef Id="ProductComponents" />
+        <ComponentRef Id="ProgramMenuDir"/>
+        <ComponentRef Id="UninstallShortcutComponent"/>
+        <ComponentRef Id="RemoveTestLOG"/>
+      </Feature>
+		</Feature>
+  
+    <!--<UIRef Id="MyWixUI_Mondo"/>--><!--библиотека пользовательского интерфейса, не использует автоматически локализованные(или модифицированные, в случае английского языка) тексты ошибок и действий в языковых файлах-->
+    <!--<UIRef Id="WixUI_ErrorProgressText"/>--><!--Без этой ссылки будет использовать не только стандартные сообщения внутри установщика Windows-->
+    <UI Id="WixUI_ru-ru"/>
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.WinFormsApp1.TargetDir)License.rtf"/>
+    <WixVariable Id="WixUIUpIco" Value="$(var.WinFormsApp1.TargetDir)wix-32convert.ico"/>
+    <UI Id="MyWixUI_Mondo">
+      <UIRef Id="WixUI_Mondo" />
+
+
+      <DialogRef Id="InvalidPidDlg" />
+      <DialogRef Id="UserRegistrationDlg" />
+
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="UserRegistrationDlg" Order="2">LicenseAccepted = "1"</Publish>
+      <Publish Dialog="InvalidPidDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+      <Publish Dialog="InvalidPidDlg" Control="Next" Event="NewDialog" Value="SetupTypeDlg">1</Publish>
+      
+      <Publish Dialog="SetupTypeDlg" Control="Back" Event="NewDialog" Value="UserRegistrationDlg">1</Publish>
+
+    </UI>
+    <UIRef Id="WixUI_ErrorProgressText" />
+
+    <Property Id="PIDTemplate"><![CDATA[12345<### ###>@@@@@]]></Property>
+
+  </Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="WixForConsole">
+          <Component Id="RemoveTestLOG" Guid="BF82566F-8D90-4D64-88FC-A4AED32509C5">
+            <RemoveFile Id="RemoveLogFileOnDesktop" On="uninstall" Name="Test.log"/>
+            <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\[ProductName]" Type="string" Value="" KeyPath="yes"/>
+          </Component>
+        </Directory> <!--Сюда устанавливаем exe-->
+			</Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ProgramMenuDir" Name="WixForConsole">
+          <Component Id="ProgramMenuDir" Guid="751BB47B-B8C6-406A-9427-C1B084D4F1B2">
+            <RemoveFolder Id="ProgramMenuDir" On="uninstall"/>
+            <!--Registry Key and Value https://www.firegiant.com/wix/tutorial/getting-started/beyond-files/-->
+            <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\[ProductName]" Type="string" Value="" KeyPath="yes"/>
+          </Component>
+        </Directory>
+        <Directory Id="ShortcutFolder" Name="WixForConsole">
+          <Component Id ="UninstallShortcutComponent" Guid="04257FA1-9F9E-41B2-8B6B-95D26DF08F71">
+            <Shortcut Id="UninstallWixForConsole" 
+                      Directory="DesktopFolder" 
+                      Name="Uninstall WixForConsole"
+                      Description="Uninstall my WixForConsole"
+                      Target="[System64Folder]msiexec.exe"
+                      Arguments="/x [ProductCode]"/>
+            <RemoveFolder Id="RemoveShortcutFolder" On="uninstall"/>
+            <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\[ProductName]" Type="string" Value="" KeyPath="yes"/>
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="DesktopFolder" Name="WixForConsole"> <!--С рабочего стола нельзя удалить файл, только Shortcuts описанные в директории ShortcutFolder-->
+      </Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+      <!-- TODO: Insert files, registry keys, and other resources here. -->
+      <Component Id="WinFormsApp1" Guid="987F7F2F-64DB-4FF5-B144-634D1A3CE67F">
+        <File Id="WinFormsApp1.exe" Source="$(var.WinFormsApp1.TargetDir)WinFormsApp1.exe" KeyPath="yes" Checksum="yes">
+          <Shortcut Id="startmenuWinFormApp1" Directory="ProgramMenuDir" Name="WinFormApp" Advertise="yes" Icon="startmenuwix32.exe">
+          <Icon Id="startmenuwix32.exe" SourceFile="$(var.WinFormsApp1.TargetDir)wix-32convert.exe"/>
+          </Shortcut>
+          <Shortcut Id="desktopWinFormApp1" Directory="DesktopFolder" Name="WinFormApp" Advertise="yes" Icon="desktopwix32.exe">
+            <Icon Id="desktopwix32.exe" SourceFile="$(var.WinFormsApp1.TargetDir)wix-32convert.exe"/>
+          </Shortcut>
+        </File>
+        <File Id="WinFormsApp1.dll" Source="$(var.WinFormsApp1.TargetDir)WinFormsApp1.dll" Checksum="yes" />
+        <File Id="WinFormsApp1.runtimeconfig.json" Source="$(var.WinFormsApp1.TargetDir)WinFormsApp1.runtimeconfig.json" Checksum="yes" />
+      </Component>
+      <!--<Component Id="ConsoleApp1" Guid="DA67EC0C-9523-43B8-862B-D75F32839A18">
+        <File Id="ConsoleApp1.exe" Source="$(var.ConsoleApp1.TargetDir)ConsoleApp1.exe" KeyPath="yes" Checksum="yes" />
+        <File Id="ConsoleApp1.dll" Source="$(var.ConsoleApp1.TargetDir)ConsoleApp1.dll" Checksum="yes" />
+        <File Id="ConsoleApp1.runtimeconfig.json" Source="$(var.ConsoleApp1.TargetDir)ConsoleApp1.runtimeconfig.json" Checksum="yes" />
+      </Component>-->
+      <!--<Component Id="WinFormsApp1.runtimeconfig.json" Guid="29EFAFD0-5C45-4AD0-9D4E-38E5E9BFE282">
+        <File Id="WinFormsApp1.runtimeconfig.json" Source="$(var.WinFormsApp1.TargetPath)" KeyPath="yes" Checksum="yes" />
+      </Component>-->
+		</ComponentGroup>
+	</Fragment>
+
+</Wix>

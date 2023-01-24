@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+	<Bundle Name="BundleSetup" Version="1.0.0.0" Manufacturer="bv" UpgradeCode="efc4adc3-20f6-4c16-aa04-34dc602296ca">
+    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
+      <bal:WixStandardBootstrapperApplication LicenseFile="License.rtf" LogoFile="microsoft_logo_56x56.png"/>
+    </BootstrapperApplicationRef>
+
+    <util:RegistrySearch Root="HKLM" 
+                         Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" 
+                         Result="exists"
+                         Variable="Net4FullVersion" 
+                         Win64="yes"/>
+    <util:RegistrySearch Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full"
+                         Value="Release"
+                         Variable="Net4FullRelease" 
+                         Win64="yes"/>
+    <!--<util:RegistrySearch Root="HKLM" 
+                         Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" 
+                         Value="Version" 
+                         Variable="Net4x64FullVersion" 
+                         Win64="yes" />-->
+    <util:RegistrySearch Root="HKLM" 
+                         Key="SYSTEM\CurrentControlSet\Services\postgresql-x64-14" 
+                         Result="exists" 
+                         Variable="PostgreSQL14"
+                         Win64="yes"/>
+    
+		<Chain>
+      
+      <!--<ExePackage Id="Net4Full" Name="Microsoft .NET Framework 4.0 Setup" Cache="no" Compressed="yes" PerMachine="yes" Permanent="yes" 
+                  SourceFile="dotNetFx40_Full_setup.exe" InstallCommand="/q ACTION=Install" Vital="yes" 
+                  DetectCondition="Net4FullVersion AND Net4x64FullVersion"
+                  InstallCondition="NOT (Net4FullVersion OR Net4x64FullVersion)"/>-->
+      <!--<ExePackage Id="Net451" Name="Microsoft .NET Framework 4.5.1 Setup" Cache="no" Compressed="yes" PerMachine="yes" Permanent="yes"
+                  SourceFile="NDP451-KB2859818-Web.exe" InstallCommand="/q ACTION=Install" Vital="yes"
+                  InstallCondition="(NOT Net4FullVersion) OR (Net4FullRelease &lt; 378675)"/>-->
+      
+      <!--SourceFile="ndp48-x86-x64-allos-enu.exe"  Name=""   PerMachine="yes"  InstallCommand="/q ACTION=Install" Vital="yes"-->
+      <ExePackage Id="Net48" 
+                  DownloadUrl="https://go.microsoft.com/fwlink/?linkid=2088631"
+                  Name="Microsoft .NET Framework 4.8.0 Setup"
+                  Compressed="no" Permanent="yes" Vital="yes" 
+                  InstallCondition="(NOT Net4FullVersion) OR (Net4FullRelease &lt; 528040)">
+        <RemotePayload ProductName="Microsoft .NET Framework 4.8" 
+                       Description="Microsoft .NET Framework 4.8 Setup" 
+                       Hash="E322E2E0FB4C86172C38A97DC6C71982134F0570" 
+                       Version="4.8.4115.0" 
+                       Size="121307088"/>
+      </ExePackage>
+                  <!--Net4FullRelease = https://learn.microsoft.com/ru-ru/dotnet/framework/migration-guide/how-to-determine-which-versions-are-installed-->
+      
+      <!--DownloadUrl="https://www.enterprisedb.com/postgresql-tutorial-resources-training?uuid=db55e32d-e9f0-4d7c-9aef-b17d01210704campaignId=7012J000001NhszQAC"--> 
+      <!--SourceFile="postgresql-14.6-1-windows-x64.exe" Compressed="no" Name="PostgreSQL 14.6 Setup" Cache="no"  PerMachine="yes" Permanent="yes" InstallCommand="/q ACTION=Install" Vital="yes" -->
+      <ExePackage Id="Postgresql.14.6.1.windows.x64"
+                  DownloadUrl="https://sbp.enterprisedb.com/getfile.jsp?fileid=1258232"
+                  Name="PostgreSQL"
+                  Compressed="no" Permanent="yes" Vital="yes">
+        <!--InstallCondition="NOT PostgreSQL14">-->
+        <RemotePayload ProductName="PostgreSQL"
+                       Description="PostgreSQL14.6"
+                       Hash="65DBAE982C4C4A70BFA522BB545BA270D70B46A4"
+                       Version="14.0.0.0"
+                       Size="327649936"/>
+      </ExePackage>
+      <ExePackage Id="Npp.7.Installer.x64"
+                  DownloadUrl="https://notepad-plus-plus.org/repository/7.x/7.0/npp.7.Installer.x64.exe"
+                  Name="Notepad++ 7"
+                  Compressed="no" Permanent="yes" Vital="yes">
+        <RemotePayload ProductName="Notepad++ 7"
+                       Description="Notepad++ x64"
+                       Hash="52AF12274FD17AD3F6846E5C4F55299959A2B2A7"
+                       Version="0.7.0.0"
+                       Size="2841640"/><!--2,71 Mb-->
+      </ExePackage>
+      
+      <RollbackBoundary />
+
+      <MsiPackage Id="MainPackage" SourceFile="$(var.SolutionDir)WixForConsole\bin\Debug\WixForConsole.msi" DisplayInternalUI="yes" Compressed="yes" Vital="yes" />
+		</Chain>
+	</Bundle>
+</Wix>
